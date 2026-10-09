@@ -83,7 +83,7 @@ def process_and_match(image_bytes, registry_df, threshold=0.75):
     except Exception as e:
         return None, f"Matrix Processing Error: {str(e)}"
     
-    best_match_idx = None
+    best_match = None
     min_distance = float("inf")
     
     for idx, row in registry_df.iterrows():
@@ -93,12 +93,12 @@ def process_and_match(image_bytes, registry_df, threshold=0.75):
         cos_dist = distance.cosine(victim_vector, db_vector)
         if cos_dist < min_distance:
             min_distance = cos_dist
-            best_match_idx = idx
+            best_match = row
             
-    if best_match_idx is not None and min_distance <= threshold:
-        confidence = (1 - min_distance) * 100
-        return registry_df.loc[best_match_idx].to_dict(), confidence
-    return None, (1 - min_distance) * 100 if best_match_idx is not None else 0
+    confidence = (1 - min_distance) * 100
+    if min_distance <= threshold:
+        return best_match, confidence
+    return None, confidence
 
 def decode_qr_code(image_bytes):
     file_bytes = np.asarray(bytearray(image_bytes.read()), dtype=np.uint8)
@@ -149,10 +149,8 @@ with col_control:
             st.image(uploaded_face, caption="ER Input Photo", use_container_width=True)
             with st.spinner("Analyzing image grid signatures via OpenCV..."):
                 uploaded_face.seek(0)
-                matched_dict, confidence_metric = process_and_match(uploaded_face, st.session_state.db)
-                if matched_dict is not None:
-                    active_profile = matched_dict
-                else:
+                active_profile, confidence_metric = process_and_match(uploaded_face, st.session_state.db)
+                if active_profile is None:
                     status_msg = "No biometric match found in active registry records."
 
     with tab_qr:
@@ -163,10 +161,9 @@ with col_control:
                 uploaded_qr.seek(0)
                 decoded_id, qr_err = decode_qr_code(uploaded_qr)
                 if decoded_id:
-                    match_rows = st.session_state.db[st.session_state.db["citizen_id"] == decoded_id]
-                    if not match_rows.empty:
-                        # Extract row safely as a flat dictionary object
-                        active_profile = match_rows.iloc[0].to_dict()
+                    match_row = st.session_state.db[st.session_state.db["citizen_id"] == decoded_id]
+                    if not match_row.empty:
+                        active_profile = match_row.iloc[0]
                         confidence_metric = 100.0
                     else:
                         status_msg = f"Token Decoded as `{decoded_id}`, but no citizen matches this ID."
@@ -175,6 +172,7 @@ with col_control:
                     
     with tab_register:
         st.markdown("### 📋 National Health Registry Onboarding Form")
+        st.write("Input patient demographics to provision a physical identity token and map biometric signatures.")
         
         with st.form("registration_form", clear_on_submit=True):
             reg_name = st.text_input("Full Name (First Last)", placeholder="e.g. Chukwuma Awolowo")
