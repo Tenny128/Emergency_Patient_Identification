@@ -76,4 +76,4 @@ If you wish to test this project locally inside your own isolated environment:
 ---
 
 ## 📜 Legal & Licensing
-This software is shared under the **MIT License**. It includes a full legal disclaimer stating that the software is provided "as is", without warranty of any kind, protecting the creator from operational liability in clinical testing spaces.
+This software is not shared under any license. You do not have permission to copy the code or use it in anyway at this time. 
