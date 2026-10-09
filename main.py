@@ -34,8 +34,7 @@ def load_synthetic_database():
                     "Refused (No Blood Products or Fractions)",
                     "Consented with Restrictions (Autologous Only)",
                     "Consented with Restrictions (Blood Components and Minor Fractions)",
-                    "Consented with Restrictions (Minor Blood Fractions Only)",
-                    "Emergency Consent Only (Implied Consent if Unconscious)"
+                    "Consented with Restrictions (Minor Blood Fractions Only)"
     ]
 
     records = []
