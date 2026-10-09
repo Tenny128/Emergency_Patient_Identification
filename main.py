@@ -57,7 +57,6 @@ def load_synthetic_database():
         })
     return pd.DataFrame(records)
 
-# Preserve memory tracking
 if 'db' not in st.session_state:
     st.session_state.db = load_synthetic_database()
 
@@ -84,7 +83,7 @@ def process_and_match(image_bytes, registry_df, threshold=0.75):
     except Exception as e:
         return None, f"Matrix Processing Error: {str(e)}"
     
-    best_match = None
+    best_match_idx = None
     min_distance = float("inf")
     
     for idx, row in registry_df.iterrows():
@@ -94,12 +93,12 @@ def process_and_match(image_bytes, registry_df, threshold=0.75):
         cos_dist = distance.cosine(victim_vector, db_vector)
         if cos_dist < min_distance:
             min_distance = cos_dist
-            best_match = row
+            best_match_idx = idx
             
-    confidence = (1 - min_distance) * 100
-    if min_distance <= threshold:
-        return best_match, confidence
-    return None, confidence
+    if best_match_idx is not None and min_distance <= threshold:
+        confidence = (1 - min_distance) * 100
+        return registry_df.loc[best_match_idx].to_dict(), confidence
+    return None, (1 - min_distance) * 100 if best_match_idx is not None else 0
 
 def decode_qr_code(image_bytes):
     file_bytes = np.asarray(bytearray(image_bytes.read()), dtype=np.uint8)
@@ -150,9 +149,9 @@ with col_control:
             st.image(uploaded_face, caption="ER Input Photo", use_container_width=True)
             with st.spinner("Analyzing image grid signatures via OpenCV..."):
                 uploaded_face.seek(0)
-                matched_row, confidence_metric = process_and_match(uploaded_face, st.session_state.db)
-                if matched_row is not None:
-                    active_profile = matched_row.to_dict()
+                matched_dict, confidence_metric = process_and_match(uploaded_face, st.session_state.db)
+                if matched_dict is not None:
+                    active_profile = matched_dict
                 else:
                     status_msg = "No biometric match found in active registry records."
 
@@ -164,9 +163,10 @@ with col_control:
                 uploaded_qr.seek(0)
                 decoded_id, qr_err = decode_qr_code(uploaded_qr)
                 if decoded_id:
-                    match_row = st.session_state.db[st.session_state.db["citizen_id"] == decoded_id]
-                    if not match_row.empty:
-                        active_profile = match_row.iloc[0].to_dict()
+                    match_rows = st.session_state.db[st.session_state.db["citizen_id"] == decoded_id]
+                    if not match_rows.empty:
+                        # Extract row safely as a flat dictionary object
+                        active_profile = match_rows.iloc[0].to_dict()
                         confidence_metric = 100.0
                     else:
                         status_msg = f"Token Decoded as `{decoded_id}`, but no citizen matches this ID."
