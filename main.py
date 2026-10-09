@@ -30,13 +30,12 @@ def load_synthetic_database():
 
     # Pool to simulate realistic consent choices (incorporating personal/religious preferences)
     consent_pool = [
-        "Fully Consented (Accept All Products)",
-        "Fully Consented (Accept All Products)",
-        "Fully Consented (Accept All Products)",
-        "Refused (No Blood Products or Fractions)",
-        "Consented with Restrictions (Autologous Only)",
-        "Consented for Fractions Only (No Whole Blood/RBCs)",
-        "Emergency Consent Only (Implied Consent if Unconscious)"
+                    "Fully Consented (Accept All Products)",
+                    "Refused (No Blood Products or Fractions)",
+                    "Consented with Restrictions (Autologous Only)",
+                    "Consented with Restrictions (Blood Components and Minor Fractions)",
+                    "Consented with Restrictions (Minor Blood Fractions Only)",
+                    "Emergency Consent Only (Implied Consent if Unconscious)"
     ]
 
     records = []
