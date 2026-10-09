@@ -25,8 +25,8 @@ def load_synthetic_database():
     allergies_pool = ["None", "Penicillin", "Sulfa drugs", "Aspirin", "Nuts"]
     states = ["Lagos", "Ogun", "Oyo", "Kano", "Anambra", "Rivers", "FCT Abuja"]
     
-    # Fully expanded pool to simulate all 5 legal and clinical directives seamlessly
     consent_pool = [
+        "Fully Consented (Accept All Products)", 
         "Fully Consented (Accept All Products)", 
         "Fully Consented (Accept All Products)", 
         "Refused (No Blood Products or Fractions)", 
@@ -57,7 +57,7 @@ def load_synthetic_database():
         })
     return pd.DataFrame(records)
 
-# Use Session State to hold data permanently across UI interactions
+# Preserve memory tracking
 if 'db' not in st.session_state:
     st.session_state.db = load_synthetic_database()
 
@@ -149,9 +149,12 @@ with col_control:
         if uploaded_face:
             st.image(uploaded_face, caption="ER Input Photo", use_container_width=True)
             with st.spinner("Analyzing image grid signatures via OpenCV..."):
-                uploaded_file_bytes = uploaded_face
-                uploaded_file_bytes.seek(0)
-                active_profile, confidence_metric = process_and_match(uploaded_file_bytes, st.session_state.db)
+                uploaded_face.seek(0)
+                matched_row, confidence_metric = process_and_match(uploaded_face, st.session_state.db)
+                if matched_row is not None:
+                    active_profile = matched_row.to_dict()
+                else:
+                    status_msg = "No biometric match found in active registry records."
 
     with tab_qr:
         uploaded_qr = st.file_uploader("Scan Emergency Bracelet or Medical ID Card QR...", type=["jpg", "jpeg", "png"], key="qr_up")
@@ -163,7 +166,7 @@ with col_control:
                 if decoded_id:
                     match_row = st.session_state.db[st.session_state.db["citizen_id"] == decoded_id]
                     if not match_row.empty:
-                        active_profile = match_row.iloc
+                        active_profile = match_row.iloc[0].to_dict()
                         confidence_metric = 100.0
                     else:
                         status_msg = f"Token Decoded as `{decoded_id}`, but no citizen matches this ID."
@@ -172,7 +175,6 @@ with col_control:
                     
     with tab_register:
         st.markdown("### 📋 National Health Registry Onboarding Form")
-        st.write("Input patient demographics to provision a physical identity token and map biometric signatures.")
         
         with st.form("registration_form", clear_on_submit=True):
             reg_name = st.text_input("Full Name (First Last)", placeholder="e.g. Chukwuma Awolowo")
@@ -182,7 +184,6 @@ with col_control:
                 reg_blood = st.selectbox("Blood Group", ["O+", "A+", "B+", "AB+", "O-", "A-", "B-", "AB-"])
                 reg_state = st.text_input("State of Residence", value="Lagos")
             with c2:
-                # Updated form selection matrix containing all 5 necessary directives
                 reg_consent = st.selectbox("Transfusion Consent Directive", [
                     "Fully Consented (Accept All Products)",
                     "Refused (No Blood Products or Fractions)",
@@ -204,10 +205,9 @@ with col_control:
             
             if submit_btn:
                 if not reg_name or not reg_nok_name or not reg_nok_phone:
-                    st.error("Missing Profile Criteria: Name, Next of Kin, and Phone numbers are strictly mandatory fields.")
+                    st.error("Missing Profile Criteria: Name, Next of Kin, and Phone numbers are mandatory.")
                 else:
                     new_id = f"NGA-{random.randint(110000, 999999)}"
-                    
                     if reg_photo:
                         reg_photo.seek(0)
                         extracted_sig = extract_opencv_features(reg_photo)
