@@ -221,4 +221,9 @@ with col_control:
                         "state": reg_state,
                         "blood_group": reg_blood,
                         "allergies": reg_allergies,
+                        "blood_transfusion_consent": reg_consent,
+                        "next_of_kin_name": reg_nok_name,
+                        "next_of_kin_phone": reg_nok_phone,
+                        "facial_embedding": vector_list
+                    }
 
