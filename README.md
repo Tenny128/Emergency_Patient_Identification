@@ -2,7 +2,6 @@
 ### Hybrid Emergency Triage Dashboard for Nigerian Hospitals
 
 🚀 **[Launch App](https://emergencypatientidentification-ppxdf2q3hrgqmhoji5qfcr.streamlit.app/)
-[![License: MIT](https://shields.io)](https://opensource.org)
 
 An intelligent, multi-modal emergency patient identification and identity recovery prototype designed to bridge critical administrative bottlenecks in Nigerian emergency rooms, by reducing the number of unidentified accident victims in emergency rooms and gave hospitals quick access to emergency information of patients brought in during an emergency who cannot speak for th emselves.
 
