@@ -140,9 +140,15 @@ st.markdown("---")
 col_control, col_display = st.columns([1.1, 1.4])
 
 with col_control:
-    st.header("📸 Emergency Scanning Intake")
-    tab_face, tab_qr, tab_sandbox = st.tabs(["👤 Biometric Face Scan", "🎫 Bracelet / Card Scan", "🛠️ Sandbox Tools"])
-
+    st.header("📸 Emergency Scanning & Registration Intake")
+    
+    tab_face, tab_qr, tab_register, tab_sandbox = st.tabs([
+        "👤 Biometric Face Scan", 
+        "🎫 Bracelet / Card Scan", 
+        "📝 Citizen Registration",
+        "🛠️ Sandbox Database"
+    ])
+    
     active_profile = None
     status_msg = None
     confidence_metric = None
