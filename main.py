@@ -1,5 +1,3 @@
-## Import dependencies
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -237,18 +235,31 @@ with col_control:
         uploaded_qr = st.file_uploader("Scan Emergency Bracelet or Medical ID Card QR...", type=["jpg", "jpeg", "png"],
                                        key="qr_up")
         if uploaded_qr:
-            st.image(uploaded_qr, caption="Scanned Token Area", use_container_width=True)
+            st.image(uploaded_qr, caption="Scanned Token Area", width='stretch')
             with st.spinner("Decoding token structures via local SQLite engine..."):
                 uploaded_qr.seek(0)
                 decoded_id, qr_err = decode_qr_code(uploaded_qr)
                 if decoded_id:
-                    df_current = fetch_active_registry_dataframe()
-                    match_row = df_current[df_current["citizen_id"] == decoded_id]
-                    if not match_row.empty:
-                        active_profile = match_row.iloc
+                    # Clear out any hidden formatting spaces from the scanner
+                    cleaned_id = str(decoded_id).strip()
+
+                    # Query SQLite directly using a parameterized WHERE clause
+                    conn = sqlite3.connect(DB_FILE)
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT * FROM citizens WHERE TRIM(citizen_id) = ?", (cleaned_id,))
+                    row_data = cursor.fetchone()
+
+                    if row_data:
+                        # Rebuild your Pandas Series array with the matching columns
+                        cursor.execute("PRAGMA table_info(citizens)")
+                        cols = [col[1] for col in cursor.fetchall()]
+                        conn.close()
+
+                        active_profile = pd.Series(row_data, index=cols)
                         confidence_metric = 100.0
                     else:
-                        status_msg = f"Token Decoded as `{decoded_id}`, but no database row matching this ID exists."
+                        conn.close()
+                        status_msg = f"Token Decoded as `{cleaned_id}`, but no matching row exists in the SQL file."
                 else:
                     status_msg = qr_err
 
