@@ -355,37 +355,38 @@ with tab_sandbox:
             else:
                 st.success(f"✅ Match Confirmed via Biometric Features! (Confidence Score: {confidence_metric:.2f}%)")
 
-        # Display Critical Medical Info First
-        st.markdown("### 🩸 Critical Medical Profile")
-        med_c1, med_c2 = st.columns(2)
-        with med_c1:
-            st.metric(label="Blood Group", value=active_profile["blood_group"])
-        with med_c2:
-            st.metric(label="Known Allergies", value=active_profile["allergies"])
+            # Display Critical Medical Info First
+            st.markdown("### 🩸 Critical Medical Profile")
+            med_c1, med_c2 = st.columns(2)
+            with med_c1:
+                st.metric(label="Blood Group", value=active_profile["blood_group"])
+            with med_c2:
+                st.metric(label="Known Allergies", value=active_profile["allergies"])
 
-        # Clear, actionable notice box for transfusion directives
-        st.markdown("#### 📢 Transfusion & Blood Components Directive")
-        consent_status = active_profile["blood_transfusion_consent"]
+            # Clear, actionable notice box for transfusion directives
+            st.markdown("#### 📢 Transfusion & Blood Components Directive")
+            consent_status = active_profile["blood_transfusion_consent"]
 
-        if "Fully Consented" in consent_status:
-            st.success(f"✔️ {consent_status}")
-        elif "Refused" in consent_status:
-            st.error(f"⚠️ LEGAL NOTICE: {consent_status}")
+            if "Fully Consented" in consent_status:
+                st.success(f"✔️ {consent_status}")
+            elif "Refused" in consent_status:
+                st.error(f"⚠️ LEGAL NOTICE: {consent_status}")
+            else:
+                st.warning(f"⚡ RESTRICTED HANDLING: {consent_status}")
+
+            st.markdown("### 👤 Personal Details")
+            st.write(f"**Full Name:** {active_profile['full_name']}")
+            st.write(f"**National Health ID:** {active_profile['citizen_id']}")
+            st.write(f"**State of Residence:** {active_profile['state']}")
+
+            st.markdown("---")
+            st.markdown("### 📞 Next of Kin (Emergency Notification Contact)")
+            st.warning(f"**Primary Contact:** {active_profile['next_of_kin_name']}")
+            st.subheader(f"📱 Phone: `{active_profile['next_of_kin_phone']}`")
+
+        elif status_msg:
+            st.error(f"❌ Verification Error: {status_msg}")
         else:
-            st.warning(f"⚡ RESTRICTED HANDLING: {consent_status}")
+            st.info("Awaiting input data. Use the panels on the left to complete a face match or scan a token.")
 
-        st.markdown("### 👤 Personal Details")
-        st.write(f"**Full Name:** {active_profile['full_name']}")
-        st.write(f"**National Health ID:** {active_profile['citizen_id']}")
-        st.write(f"**State of Residence:** {active_profile['state']}")
-
-        st.markdown("---")
-        st.markdown("### 📞 Next of Kin (Emergency Notification Contact)")
-        st.warning(f"**Primary Contact:** {active_profile['next_of_kin_name']}")
-        st.subheader(f"📱 Phone: `{active_profile['next_of_kin_phone']}`")
-
-    elif status_msg:
-        st.error(f"❌ Verification Error: {status_msg}")
-    else:
-        st.info("Awaiting input data. Use the panels on the left to complete a face match or scan a token.")
 
