@@ -317,35 +317,43 @@ with col_control:
                                        file_name=f"bracelet_{new_id}.png", mime="image/png")
 
 with tab_sandbox:
-    st.markdown("### 🧬 Current Active SQLite Database Rows View")
-    current_db_df = fetch_active_registry_dataframe()
-    st.dataframe(current_db_df[['citizen_id', 'full_name', 'blood_group', 'blood_transfusion_consent']],
-                 use_container_width=True)
-    st.markdown("---")
-    if not current_db_df.empty:
-        # Added [0] index to safely pull the first row slice as a flat series array
-        demo_target = current_db_df.iloc[0]
-        st.info(f"Target Sandbox Selector for testing: **{demo_target['full_name']}** (`{demo_target['citizen_id']}`)")
-        qr_bytes = generate_qr_image(demo_target["citizen_id"])
-        st.download_button(label="📥 Download Selected Registry Code Wristband", data=qr_bytes,
-                           file_name="mock_emergency_bracelet.png", mime="image/png")
+    st.markdown("### 🔐 Restricted Access Area")
+    # Simple state authorization check
+    access_password = st.text_input("Enter Hospital Administrator Security Key", type="password")
 
+    if access_password == "NGA_ADMIN_2026":
+        st.markdown("### 🧬 Current Active SQLite Database Rows View")
+        current_db_df = fetch_active_registry_dataframe()
+        st.dataframe(current_db_df[['citizen_id', 'full_name', 'blood_group', 'blood_transfusion_consent']],
+                    use_container_width=True)
         st.markdown("---")
-        if uploaded_face and st.button("Link Face Image to Target Slot"):
-            try:
-                uploaded_face.seek(0)
-                sig = extract_opencv_features(uploaded_face)
-                if sig is not None:
-                    conn = sqlite3.connect(DB_FILE)
-                    cursor = conn.cursor()
-                    cursor.execute("UPDATE citizens SET facial_embedding = ? WHERE citizen_id = ?",
-                                   (json.dumps(sig.tolist()), demo_target['citizen_id']))
-                    conn.commit()
-                    conn.close()
-                    st.success(
-                        "Face signature permanently linked to Target SQL slot successfully! Refresh page to execute trace match.")
-            except Exception as e:
-                st.error(f"Mapping failed: {e}")
+        if not current_db_df.empty:
+            # Added [0] index to safely pull the first row slice as a flat series array
+            demo_target = current_db_df.iloc[0]
+            st.info(f"Target Sandbox Selector for testing: **{demo_target['full_name']}** (`{demo_target['citizen_id']}`)")
+            qr_bytes = generate_qr_image(demo_target["citizen_id"])
+            st.download_button(label="📥 Download Selected Registry Code Wristband", data=qr_bytes,
+                            file_name="mock_emergency_bracelet.png", mime="image/png")
+
+            st.markdown("---")
+            if uploaded_face and st.button("Link Face Image to Target Slot"):
+                try:
+                    uploaded_face.seek(0)
+                    sig = extract_opencv_features(uploaded_face)
+                    if sig is not None:
+                        conn = sqlite3.connect(DB_FILE)
+                        cursor = conn.cursor()
+                        cursor.execute("UPDATE citizens SET facial_embedding = ? WHERE citizen_id = ?",
+                                    (json.dumps(sig.tolist()), demo_target['citizen_id']))
+                        conn.commit()
+                        conn.close()
+                        st.success(
+                            "Face signature permanently linked to Target SQL slot successfully! Refresh page to execute trace match.")
+                except Exception as e:
+                    st.error(f"Mapping failed: {e}")
+    else:
+        st.warning(
+            "Access Denied: This tab contains protected health information (PHI) restricted to authorized clinical staff.")
 
     with col_display:
         st.header("📋 Identity & Life-Saving Metadata")
@@ -389,5 +397,6 @@ with tab_sandbox:
             st.error(f"❌ Verification Error: {status_msg}")
         else:
             st.info("Awaiting input data. Use the panels on the left to complete a face match or scan a token.")
+
 
 
