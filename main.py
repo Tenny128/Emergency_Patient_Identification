@@ -333,7 +333,7 @@ with tab_sandbox:
         try:
             uploaded_face.seek(0)
             sig = extract_opencv_features(uploaded_face)
-             if sig is not None:
+            if sig is not None:
                 conn = sqlite3.connect(DB_FILE)
                 cursor = conn.cursor()
         # Update vector coordinates permanently for row index 1 inside the SQL table
@@ -343,7 +343,7 @@ with tab_sandbox:
                 conn.close()
                 st.success(
                     "Face signature permanently linked to Target SQL slot successfully! Refresh page to execute trace match.")
-            except Exception as e:
+        except Exception as e:
                 st.error(f"Mapping failed: {e}")
 
     with col_display:
@@ -389,5 +389,4 @@ with tab_sandbox:
 
     else:
         st.info("Awaiting input data. Use the panels on the left to complete a face match or scan a token.")
-
 
