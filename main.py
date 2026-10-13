@@ -323,27 +323,28 @@ with tab_sandbox:
                  use_container_width=True)
     st.markdown("---")
     if not current_db_df.empty:
-        demo_target = current_db_df.iloc
-        st.info(f"Target Sandbox Selector for testing: {demo_target['full_name']} ({demo_target['citizen_id']})")
+        # Added [0] index to safely pull the first row slice as a flat series array
+        demo_target = current_db_df.iloc[0]
+        st.info(f"Target Sandbox Selector for testing: **{demo_target['full_name']}** (`{demo_target['citizen_id']}`)")
         qr_bytes = generate_qr_image(demo_target["citizen_id"])
         st.download_button(label="📥 Download Selected Registry Code Wristband", data=qr_bytes,
-                       file_name="mock_emergency_bracelet.png", mime="image/png")
-    st.markdown("---")
-    if uploaded_face and st.button("Link Face Image to Target Slot"):
-        try:
-            uploaded_face.seek(0)
-            sig = extract_opencv_features(uploaded_face)
-            if sig is not None:
-                conn = sqlite3.connect(DB_FILE)
-                cursor = conn.cursor()
-        # Update vector coordinates permanently for row index 1 inside the SQL table
-                cursor.execute("UPDATE citizens SET facial_embedding = ? WHERE citizen_id = ?",
-                   (json.dumps(sig.tolist()), demo_target['citizen_id']))
-                conn.commit()
-                conn.close()
-                st.success(
-                    "Face signature permanently linked to Target SQL slot successfully! Refresh page to execute trace match.")
-        except Exception as e:
+                           file_name="mock_emergency_bracelet.png", mime="image/png")
+
+        st.markdown("---")
+        if uploaded_face and st.button("Link Face Image to Target Slot"):
+            try:
+                uploaded_face.seek(0)
+                sig = extract_opencv_features(uploaded_face)
+                if sig is not None:
+                    conn = sqlite3.connect(DB_FILE)
+                    cursor = conn.cursor()
+                    cursor.execute("UPDATE citizens SET facial_embedding = ? WHERE citizen_id = ?",
+                                   (json.dumps(sig.tolist()), demo_target['citizen_id']))
+                    conn.commit()
+                    conn.close()
+                    st.success(
+                        "Face signature permanently linked to Target SQL slot successfully! Refresh page to execute trace match.")
+            except Exception as e:
                 st.error(f"Mapping failed: {e}")
 
     with col_display:
