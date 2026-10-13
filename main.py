@@ -386,7 +386,6 @@ with tab_sandbox:
 
     elif status_msg:
         st.error(f"❌ Verification Error: {status_msg}")
-
     else:
         st.info("Awaiting input data. Use the panels on the left to complete a face match or scan a token.")
 
